@@ -1,6 +1,13 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs').promises;
+const crypto = require('crypto');
+
+/* const validUser = {
+  email: 'email@email.com',
+  password: '123456',
+  token: '7mqaVRXJSp886CGr',
+}; */
 
 const app = express();
 app.use(bodyParser.json());
@@ -33,8 +40,30 @@ app.get('/talker/:id', async (request, response) => {
   }
 
   return response.status(200).json(query);
-  });
+});
+
+app.post('/login', async (request, response) => {
+  // const { email, password } = request.body;
+
+  const token = crypto.randomBytes(8).toString('hex');
+
+  return response.status(200).json({ token });
+});
 
 app.listen(PORT, () => {
   console.log('Online', PORT);
 });
+
+/* if (!email) {
+    return response.status(400).json({ message: 'O campo "email" é obrigatório' });
+  }
+  if (!password) {
+    return response.status(400).json({ message: 'O campo "password" é obrigatório' });
+  }
+  
+  if (email !== validUser.email) {
+    return response.status(400).json({ message: 'O "email" deve ter o formato "email@email.com"' });
+  }
+  if (password < 6) {
+    return response.status(400).json({ message: 'O "password" deve ter pelo menos 6 caracteres' });
+  } */
