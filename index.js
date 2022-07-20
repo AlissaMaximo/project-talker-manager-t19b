@@ -169,8 +169,18 @@ async (request, response) => {
 
   const newTalkers = talkers.map((talker) => (talker.id === Number(id) ? editedTalker : talker));
 
-  fs.writeFile('./talker.json', JSON.stringify(newTalkers));
+  fs.writeFile(talkerJSONFile, JSON.stringify(newTalkers));
   return response.status(200).json(editedTalker);
+});
+
+app.delete('/talker/:id', validateToken, async (request, response) => {
+  const talkers = JSON.parse(await fs.readFile(talkerJSONFile));
+
+  const { id } = request.params;
+  const newTalkers = talkers.filter((talker) => talker.id !== Number(id));
+
+  fs.writeFile(talkerJSONFile, JSON.stringify(newTalkers));
+  return response.status(204).end();
 });
 
 app.listen(PORT, () => {
