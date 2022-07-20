@@ -2,12 +2,31 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs').promises;
 const crypto = require('crypto');
+const Joi = require('joi');
 
-/* const validUser = {
-  email: 'email@email.com',
-  password: '123456',
-  token: '7mqaVRXJSp886CGr',
-}; */
+const schema = Joi.object({
+    email: Joi.string().email(),
+    
+    password: Joi.string().min(6),
+});
+
+function validateUser(request, response, next) {
+  const { email, password } = request.body;
+  if (!email) return response.status(400).json({ message: 'O campo "email" é obrigatório' });
+  if (!password) return response.status(400).json({ message: 'O campo "password" é obrigatório' });
+
+  const emailError = schema.validate({ email }).error;
+  const passwordError = schema.validate({ password }).error;
+  
+  if (emailError !== undefined) {
+    return response.status(400).json({ message: 'O "email" deve ter o formato "email@email.com"' });
+  }
+  if (passwordError !== undefined) {
+    return response.status(400).json({ message: 'O "password" deve ter pelo menos 6 caracteres' });
+  }
+
+  next();
+}
 
 const app = express();
 app.use(bodyParser.json());
@@ -42,7 +61,7 @@ app.get('/talker/:id', async (request, response) => {
   return response.status(200).json(query);
 });
 
-app.post('/login', async (request, response) => {
+app.post('/login', validateUser, async (request, response) => {
   // const { email, password } = request.body;
 
   const token = crypto.randomBytes(8).toString('hex');
