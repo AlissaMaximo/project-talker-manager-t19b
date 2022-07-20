@@ -4,6 +4,8 @@ const fs = require('fs').promises;
 const crypto = require('crypto');
 const Joi = require('joi');
 
+const talkerJSONFile = './talker.json';
+
 const schema = Joi.object({
     email: Joi.string().email(),
     password: Joi.string().min(6),
@@ -112,7 +114,7 @@ app.get('/', (_request, response) => {
 });
 
 app.get('/talker', async (_request, response) => {
-  const talkers = JSON.parse(await fs.readFile('./talker.json'));
+  const talkers = JSON.parse(await fs.readFile(talkerJSONFile));
 
   if (talkers.length === 0) {
     return response.status(200).json([]);
@@ -122,7 +124,7 @@ app.get('/talker', async (_request, response) => {
 });
 
 app.get('/talker/:id', async (request, response) => {
-  const talkers = JSON.parse(await fs.readFile('./talker.json'));
+  const talkers = JSON.parse(await fs.readFile(talkerJSONFile));
 
   const query = talkers.find((talker) => talker.id === Number(request.params.id));
 
@@ -142,7 +144,7 @@ app.post('/login', validateUser, async (request, response) => {
 app.post('/talker',
 validateToken, validateName, validateAge, validateTalk, validateView, validateRate,
 async (request, response) => {
-  const talkers = JSON.parse(await fs.readFile('./talker.json'));
+  const talkers = JSON.parse(await fs.readFile(talkerJSONFile));
   
   const { name, age, talk } = request.body;
   const id = talkers.length + 1;
@@ -150,8 +152,25 @@ async (request, response) => {
 
   talkers.push(newTalker);
 
-  fs.writeFile('./talker.json', JSON.stringify(talkers));
+  fs.writeFile(talkerJSONFile, JSON.stringify(talkers));
   return response.status(201).json(newTalker);
+});
+
+app.put('/talker/:id',
+validateToken, validateName, validateAge, validateTalk, validateView, validateRate,
+async (request, response) => {
+  const talkers = JSON.parse(await fs.readFile(talkerJSONFile));
+
+  const { id } = request.params;
+  const { name, age, talk } = request.body;
+  const newTalkerData = { name, age, talk };
+
+  const editedTalker = { id: Number(id), ...newTalkerData };
+
+  const newTalkers = talkers.map((talker) => (talker.id === Number(id) ? editedTalker : talker));
+
+  fs.writeFile('./talker.json', JSON.stringify(newTalkers));
+  return response.status(200).json(editedTalker);
 });
 
 app.listen(PORT, () => {
